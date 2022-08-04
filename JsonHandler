@@ -1,0 +1,57 @@
+public class JsonHandler {
+
+    private List<String> allPathList;
+    
+    // This is the final required map
+    private Map<String, Object> requiredMap;
+    
+    public String runJpath(String complexJsonStr){
+        
+        Object complexJson = JSON.deserializeUntyped(complexJsonStr);
+        allPathList = new List<String>();
+        requiredMap = new Map<String, Object>();
+        
+        callInnerNode(complexJson);
+        return JSON.serialize(requiredMap);
+    }
+    
+    //This is recursive function to iterate over any level of json
+    private void callInnerNode(Object jsonStr){
+        
+        if(jsonStr instanceOf Map<String,Object>){
+            Map<String, Object> jsonObj = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(jsonStr));
+            for(String key : jsonObj.keySet()){
+                allPathList.add(key);
+                callInnerNode(jsonObj.get(key));
+            }                           
+        }       
+        
+        if(jsonStr instanceOf List<Object>){
+            List<Object> jsonArr = (List<Object>) JSON.deserializeUntyped(JSON.serialize(jsonStr));
+            Integer index = 1;
+            for(Object key : jsonArr){
+                allPathList.add('['+index+']');
+                callInnerNode(key);
+                index++;
+            }                           
+        }        
+        
+        if(!(jsonStr instanceOf List<Object>) && !(jsonStr instanceOf Map<String, Object>)){
+            Object jsonObj = jsonStr;
+            requiredMap.put(generateCurrentPath(allPathList),jsonObj);
+        }
+        if(allPathList.size() > 0){
+            allPathList.remove(allPathList.size() - 1);  
+        }    
+    }   
+    
+    // This method will create the path
+    private String generateCurrentPath(List<String> allPath){
+        
+        String requiredPath = '';
+        for(String path : allPath){
+            requiredPath += '/' + path;
+        }
+        return requiredPath;
+    } 
+}
